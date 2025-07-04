@@ -1,0 +1,36 @@
+﻿# Ignorowanie plików generowanych przez system operacyjny
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Ignorowanie katalogów popularnych edytorów kodu
+.vscode/
+.idea/
+
+# Pliki logów i zmiennych rodowiskowych
+*.log
+.env
+
+# Specyficzne dla Terraform
+# Pliki stanu nie powinny by wysyane do repozytorium
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Pliki .tfvars mog zawiera wraliwe dane
+*.tfvars
+*.tfvars.json
+
+# Plik blokady zalenoci Terraform
+.terraform.lock.hcl
+
+# Katalog tymczasowy Terraform
+.terraform/
+azure-webapp/
+
+# Logi awarii
+crash.log
