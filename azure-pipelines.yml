@@ -1,0 +1,63 @@
+# Ten pipeline będzie uruchamiany automatycznie po każdej zmianie
+# w głównej gałęzi (main) Twojego repozytorium.
+trigger:
+- main
+
+# Używamy najnowszego agenta budującego opartego na Ubuntu.
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Zmienne używane w naszym pipeline.
+variables:
+  # --- PODMIEŃ TE WARTOŚCI ---
+  
+  # Nazwa Service Connection, które właśnie udało Ci się utworzyć w DevOps.
+  serviceConnectionName: 'Azure-Subscription-Connection' 
+  
+  # Nazwa grupy zasobów dla pliku stanu (z Kroku 1).
+  terraformStateResourceGroup: 'g-terraform-state-test-20250704' 
+  
+  # Nazwa konta storage dla pliku stanu (z Kroku 1).
+  terraformStateStorage: 'stterraformstate20250704' # <-- Wpisz tutaj swoją unikalną nazwę
+  
+  # -------------------------
+
+steps:
+# Krok 1: Instalacja konkretnej wersji Terraform na agencie.
+- task: TerraformInstaller@1
+  displayName: 'Install Terraform'
+  inputs:
+    terraformVersion: 'latest'
+
+# Krok 2: Inicjalizacja Terraform.
+# Agent pobierze pluginy i połączy się ze zdalnym backendem
+# używając danych z sekcji variables.
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Init'
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: '$(serviceConnectionName)'
+    backendAzureRmResourceGroupName: '$(terraformStateResourceGroup)'
+    backendAzureRmStorageAccountName: '$(terraformStateStorage)'
+    backendAzureRmContainerName: 'tfstate'
+    backendAzureRmKey: 'prod.terraform.tfstate'
+
+# Krok 3: Generowanie planu zmian.
+# Pokazuje, co Terraform zamierza utworzyć/zmienić/usunąć.
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Plan'
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    environmentServiceNameAzureRM: '$(serviceConnectionName)'
+
+# Krok 4: Zastosowanie zmian.
+# Faktyczne tworzenie infrastruktury w Azure.
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Apply'
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    commandOptions: '-auto-approve' # Zatwierdza plan automatycznie, bez interakcji
+    environmentServiceNameAzureRM: '$(serviceConnectionName)'
